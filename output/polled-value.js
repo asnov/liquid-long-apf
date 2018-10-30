@@ -1,6 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class PolledValue {
+export class PolledValue {
     constructor(scheduler, fetcher, frequencyInMilliseconds, defaultValue) {
         this.listeners = [];
         this.scheduledTaskId = null;
@@ -36,5 +34,4 @@ class PolledValue {
     get cached() { return this.lastKnownGood; }
     get latest() { return this.outstandingFetch || this.fetch(); }
 }
-exports.PolledValue = PolledValue;
 //# sourceMappingURL=polled-value.js.map

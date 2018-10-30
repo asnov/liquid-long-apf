@@ -1,10 +1,8 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-const liquid_long_1 = require("./generated/liquid-long");
-const liquid_long_ethers_impl_1 = require("./liquid-long-ethers-impl");
-const polled_value_1 = require("./polled-value");
-const utils_1 = require("ethers/utils");
-class LiquidLong {
+import { LiquidLong as LiquidLongContract } from './generated/liquid-long';
+import { LiquidLongDependenciesEthers } from './liquid-long-ethers-impl';
+import { PolledValue } from './polled-value';
+import { bigNumberify } from 'ethers/utils';
+export class LiquidLong {
     constructor(scheduler, provider, signer, liquidLongAddress, defaultEthPriceInUsd, defaultProviderFeeRate, ethPricePollingFrequency = 10000, providerFeePollingFrequency = 10000) {
         this.shutdown = async () => {
             await Promise.all([
@@ -56,7 +54,7 @@ class LiquidLong {
             const daiPerEth = this.ethPriceInUsd.cached;
             const loanSizeInEth = this.getLoanSizeInEth(leverageMultiplier, leverageSizeInEth);
             const daiToSell = loanSizeInEth * daiPerEth;
-            const attodaiToSell = utils_1.bigNumberify(Math.floor(daiToSell * 1e9)).mul(1e9);
+            const attodaiToSell = bigNumberify(Math.floor(daiToSell * 1e9)).mul(1e9);
             const result = await this.contract.estimateDaiSaleProceeds_(attodaiToSell);
             const daiSaleProceedsInEth = result._wethBought.div(1e9).toNumber() / 1e9;
             const estimatedCostInEth = loanSizeInEth - daiSaleProceedsInEth;
@@ -65,20 +63,20 @@ class LiquidLong {
             return { low, high };
         };
         this.openPosition = async (leverageMultiplier, leverageSizeInEth, costLimitInEth, feeLimitInEth) => {
-            const leverageMultiplierInPercents = utils_1.bigNumberify(Math.round(leverageMultiplier * 100));
-            const leverageSizeInAttoeth = utils_1.bigNumberify(Math.floor(leverageSizeInEth * 1e9)).mul(1e9);
-            const allowedCostInAttoeth = utils_1.bigNumberify(Math.floor(costLimitInEth * 1e9)).mul(1e9);
-            const allowedFeeInAttoeth = utils_1.bigNumberify(Math.floor(feeLimitInEth * 1e9)).mul(1e9);
-            const affiliateFeeInAttoeth = utils_1.bigNumberify(0);
+            const leverageMultiplierInPercents = bigNumberify(Math.round(leverageMultiplier * 100));
+            const leverageSizeInAttoeth = bigNumberify(Math.floor(leverageSizeInEth * 1e9)).mul(1e9);
+            const allowedCostInAttoeth = bigNumberify(Math.floor(costLimitInEth * 1e9)).mul(1e9);
+            const allowedFeeInAttoeth = bigNumberify(Math.floor(feeLimitInEth * 1e9)).mul(1e9);
+            const affiliateFeeInAttoeth = bigNumberify(0);
             const affiliateAddress = '0x0000000000000000000000000000000000000000';
             const totalAttoeth = leverageSizeInAttoeth.add(allowedCostInAttoeth).add(allowedFeeInAttoeth).add(affiliateFeeInAttoeth);
             await this.contract.openCdp(leverageMultiplierInPercents, leverageSizeInAttoeth, allowedFeeInAttoeth, affiliateFeeInAttoeth, affiliateAddress, { attachedEth: totalAttoeth });
         };
         this.adminDepositEth = async (amount) => {
-            await this.contract.wethDeposit({ attachedEth: utils_1.bigNumberify(amount).mul(1e18.toString()) });
+            await this.contract.wethDeposit({ attachedEth: bigNumberify(amount).mul(1e18.toString()) });
         };
         this.adminWithdrawEth = async (amount) => {
-            await this.contract.wethWithdraw(utils_1.bigNumberify(amount).mul(1e18.toString()));
+            await this.contract.wethWithdraw(bigNumberify(amount).mul(1e18.toString()));
         };
         this.fetchEthPriceInUsd = async () => {
             const attousd = await this.contract.ethPriceInUsd_();
@@ -93,13 +91,12 @@ class LiquidLong {
             const loanInEth = ethLockedInCdp - leverageSizeInEth;
             return loanInEth;
         };
-        this.contract = new liquid_long_1.LiquidLong(new liquid_long_ethers_impl_1.LiquidLongDependenciesEthers(provider, signer), liquidLongAddress);
-        this.ethPriceInUsd = new polled_value_1.PolledValue(scheduler, this.fetchEthPriceInUsd, ethPricePollingFrequency, defaultEthPriceInUsd);
-        this.providerFeeRate = new polled_value_1.PolledValue(scheduler, this.fetchProviderFeeRate, providerFeePollingFrequency, defaultProviderFeeRate);
+        this.contract = new LiquidLongContract(new LiquidLongDependenciesEthers(provider, signer), liquidLongAddress);
+        this.ethPriceInUsd = new PolledValue(scheduler, this.fetchEthPriceInUsd, ethPricePollingFrequency, defaultEthPriceInUsd);
+        this.providerFeeRate = new PolledValue(scheduler, this.fetchProviderFeeRate, providerFeePollingFrequency, defaultProviderFeeRate);
         this.awaitReady = Promise.all([this.ethPriceInUsd.latest, this.providerFeeRate.latest]).then(() => { });
     }
 }
-exports.LiquidLong = LiquidLong;
 // https://github.com/nodejs/promise-use-cases/issues/27 current behavior of node is dumb, this fixes that
 // process.on('unhandledRejection', e => { /* swallow error */ })
 //# sourceMappingURL=liquid-long.js.map

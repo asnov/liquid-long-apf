@@ -1,6 +1,4 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-class Scheduler {
+export class Scheduler {
     constructor() {
         this.delay = (milliseconds) => {
             return new Promise(resolve => {
@@ -9,8 +7,7 @@ class Scheduler {
         };
     }
 }
-exports.Scheduler = Scheduler;
-class TimeoutScheduler extends Scheduler {
+export class TimeoutScheduler extends Scheduler {
     constructor() {
         super(...arguments);
         this.scheduledTaskIds = new Set();
@@ -30,5 +27,4 @@ class TimeoutScheduler extends Scheduler {
         };
     }
 }
-exports.TimeoutScheduler = TimeoutScheduler;
 //# sourceMappingURL=scheduler.js.map
