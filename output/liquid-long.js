@@ -1,7 +1,10 @@
 import { LiquidLong as LiquidLongContract } from './generated/liquid-long';
 import { LiquidLongDependenciesEthers } from './liquid-long-ethers-impl';
 import { PolledValue } from './polled-value';
-import { bigNumberify } from 'ethers/utils';
+// import { bigNumberify } from 'ethers/utils';
+import { ethers } from 'ethers';
+
+
 export class LiquidLong {
     constructor(scheduler, provider, signer, liquidLongAddress, defaultEthPriceInUsd, defaultProviderFeeRate, ethPricePollingFrequency = 10000, providerFeePollingFrequency = 10000) {
         this.shutdown = async () => {
@@ -54,7 +57,7 @@ export class LiquidLong {
             const daiPerEth = this.ethPriceInUsd.cached;
             const loanSizeInEth = this.getLoanSizeInEth(leverageMultiplier, leverageSizeInEth);
             const daiToSell = loanSizeInEth * daiPerEth;
-            const attodaiToSell = bigNumberify(Math.floor(daiToSell * 1e9)).mul(1e9);
+            const attodaiToSell = ethers.utils.bigNumberify(Math.floor(daiToSell * 1e9)).mul(1e9);
             const result = await this.contract.estimateDaiSaleProceeds_(attodaiToSell);
             const daiSaleProceedsInEth = result._wethBought.div(1e9).toNumber() / 1e9;
             const estimatedCostInEth = loanSizeInEth - daiSaleProceedsInEth;
@@ -63,20 +66,20 @@ export class LiquidLong {
             return { low, high };
         };
         this.openPosition = async (leverageMultiplier, leverageSizeInEth, costLimitInEth, feeLimitInEth) => {
-            const leverageMultiplierInPercents = bigNumberify(Math.round(leverageMultiplier * 100));
-            const leverageSizeInAttoeth = bigNumberify(Math.floor(leverageSizeInEth * 1e9)).mul(1e9);
-            const allowedCostInAttoeth = bigNumberify(Math.floor(costLimitInEth * 1e9)).mul(1e9);
-            const allowedFeeInAttoeth = bigNumberify(Math.floor(feeLimitInEth * 1e9)).mul(1e9);
-            const affiliateFeeInAttoeth = bigNumberify(0);
+            const leverageMultiplierInPercents = ethers.utils.bigNumberify(Math.round(leverageMultiplier * 100));
+            const leverageSizeInAttoeth = ethers.utils.bigNumberify(Math.floor(leverageSizeInEth * 1e9)).mul(1e9);
+            const allowedCostInAttoeth = ethers.utils.bigNumberify(Math.floor(costLimitInEth * 1e9)).mul(1e9);
+            const allowedFeeInAttoeth = ethers.utils.bigNumberify(Math.floor(feeLimitInEth * 1e9)).mul(1e9);
+            const affiliateFeeInAttoeth = ethers.utils.bigNumberify(0);
             const affiliateAddress = '0x0000000000000000000000000000000000000000';
             const totalAttoeth = leverageSizeInAttoeth.add(allowedCostInAttoeth).add(allowedFeeInAttoeth).add(affiliateFeeInAttoeth);
             await this.contract.openCdp(leverageMultiplierInPercents, leverageSizeInAttoeth, allowedFeeInAttoeth, affiliateFeeInAttoeth, affiliateAddress, { attachedEth: totalAttoeth });
         };
         this.adminDepositEth = async (amount) => {
-            await this.contract.wethDeposit({ attachedEth: bigNumberify(amount).mul(1e18.toString()) });
+            await this.contract.wethDeposit({ attachedEth: ethers.utils.bigNumberify(amount).mul(1e18.toString()) });
         };
         this.adminWithdrawEth = async (amount) => {
-            await this.contract.wethWithdraw(bigNumberify(amount).mul(1e18.toString()));
+            await this.contract.wethWithdraw(ethers.utils.bigNumberify(amount).mul(1e18.toString()));
         };
         this.fetchEthPriceInUsd = async () => {
             const attousd = await this.contract.ethPriceInUsd_();

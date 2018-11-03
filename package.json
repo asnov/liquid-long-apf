@@ -19,11 +19,6 @@
 		"url": "https://github.com/Keydonix/liquid-long/issues"
 	},
 	"homepage": "https://github.com/Keydonix/liquid-long#readme",
-	"scripts": {
-		"test": "cd ../tests && npm install && npm run test",
-		"test-no-build": "cd ../tests && npm run test-no-build",
-		"prepublishOnly": "npm run test"
-	},
 	"peerDependencies": {
 		"ethers": "4.0.4"
 	}
